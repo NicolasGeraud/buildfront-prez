@@ -1,0 +1,608 @@
+= Le build frontend
+@NicolasGeraud
+:backend: dzslides
+:dzslides-style: watermelon
+:dzslides-transition: fade
+:dzslides-fonts: family=Yanone+Kaffeesatz:400,700,200,300&family=Cedarville+Cursive
+:dzslides-highlight: monokai
+:source-highlighter: highlightjs
+:dzslides-aspect: 16-9
+:imagesdir: images
+
+
+[.topic]
+== !
+*Côté Java*
+
+== !
+image::vendome_14-b20.jpg[width="40%"]
+[.incremental]
+* build -> maven / ant
+* workflow -> Jenkins
+* qualité -> Sonar
+* repository -> Nexus
+
+== !
+image::carlton-dance.gif[width="50%"]
+* Livraison !
+
+[.topic]
+== !
+*Le build Java*
+
+[.topic.pull-center]
+== !
+image::ant-logo.png[height="60%"]
+[.incremental]
+* 2000
+* Task Manager
+
+
+[.topic.source]
+== !
+[source,xml]
+----
+<project name="MyProject" default="dist" basedir=".">
+  <property name="src" location="src"/>
+  <property name="build" location="build"/>
+  <property name="dist"  location="dist"/>
+
+  <target name="compile" description="compile the source" >
+      <javac srcdir="${src}" destdir="${build}"/>
+  </target>
+
+  <target name="dist" depends="compile" description="generate the dist" >
+      <mkdir dir="${dist}/lib"/>
+      <jar jarfile="${dist}/lib/MyProject.jar" basedir="${build}"/>
+  </target>
+
+  <target name="clean" description="clean up" >
+      <delete dir="${build}"/>
+      <delete dir="${dist}"/>
+  </target>
+</project>
+----
+
+
+[.topic.pull-center]
+== !
+image::maven-logo.svg[]
+[.incremental]
+* 2004
+* Convention over Configuration
+* Cycle de vie prédéfini
+
+
+[.topic.source]
+== !
+[source, shell]
+----
+my-app
+|-- pom.xml
+`-- src
+    |-- main
+    |   `-- java
+    |       `-- com
+    |           `-- mycompany
+    |               `-- app
+    |                   `-- App.java
+    `-- test
+        `-- java
+            `-- com
+                `-- mycompany
+                    `-- app
+                        `-- AppTest.java
+----
+
+
+[.topic.source]
+== !
+[source, xml]
+----
+<project xmlns="http://maven.apache.org/POM/4.0.0" ... >
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.mycompany.app</groupId>
+  <artifactId>my-app</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <dependencyManagement/>
+  <dependencies/>
+
+  <build>
+    <pluginManagement/>
+    <plugins/>
+  </build>
+
+</project>
+----
+
+[.topic]
+== !
+*Côté web*
+
+[.topic]
+== !
+Un seul standard *index.html*
+
+== !
+[.incremental]
+* dépendances <script/> ou <link/>
+* pas d'arborescence imposée
+
+[.topic.pull-center]
+== !
+image::html5-css3-js.png[height="100%"]
+
+[.topic.ending]
+== démo
+
+
+[.topic.pull-center]
+== !
+image::nodejs-logo.jpg[]
+
+== !
+Plateforme basée sur V8 pour réaliser des applications javascript
+
+== !
+*module*
+
+[.incremental]
+* CommonJS Modules 1.0
+* require()
+* package.json
+
+[.source]
+== package.json
+[source, json]
+----
+{
+  "name": "express",
+  "description": "Fast, unopinionated, minimalist web framework",
+  "version": "4.10.0",
+  "license": "MIT",
+  "repository": "strongloop/express",
+  "homepage": "http://expressjs.com/",
+  "dependencies": {
+  },
+  "devDependencies": {
+  }
+}
+----
+
+[.source]
+== semver
+[source, javascript]
+----
+>=1.2.7 <1.3.0
+
+
+1.2.7 || >=1.2.9 <2.0.0
+
+
+~1.2.3    :=    >=1.2.3 <1.(2+1).0    :=    >=1.2.3 <1.3.0
+~1.2      :=    >=1.2.0 <1.(2+1).0    :=    >=1.2.0 <1.3.0
+~1        :=    >=1.0.0 <(1+1).0.0    :=    >=1.0.0 <2.0.0
+
+
+^1.2.3    :=    >=1.2.3 <2.0.0
+^0.2.3    :=    >=0.2.3 <0.3.0
+^0.0.3    :=    >=0.0.3 <0.0.4
+----
+
+[.topic.pull-center]
+== !
+image::npm-logo.png[]
+
+[.source]
+== npm install
+[source, shell]
+----
+npm install (with no args in a package dir)
+npm install <tarball file>
+npm install <tarball url>
+npm install <folder>
+npm install [@<scope>/]<name> [--save|--save-dev]
+npm install [@<scope>/]<name>@<tag>
+npm install [@<scope>/]<name>@<version>
+npm install [@<scope>/]<name>@<version range>
+----
+
+[.source]
+== !
+[source, shell]
+----
+# https://github.com/twbs/bootstrap/blob/master/package.json
+$ npm install bootstrap
+
+# https://github.com/angular/angular/blob/master/package.json
+$ npm install angular
+----
+
+== !
+*Problème* : chaque module embarque ses dépendances
+
+[.source ]
+== !
+[source, shell]
+----
+$ npm install grunt
+$ ls -1 node_modules/grunt/node_modules 
+async
+coffee-script
+colors
+dateformat
+eventemitter2
+exit
+findup-sync
+getobject
+glob
+grunt-legacy-log
+grunt-legacy-util
+hooker
+iconv-lite
+js-yaml
+lodash
+...
+----
+
+[.topic.pull-center]
+== !
+image::bower-logo.png[height="100%"]
+
+[.topic]
+== !
+*Bower*
+
+[.incremental]
+* package manager pour le web
+* 7 Sept. 2012
+
+
+[.source]
+== !
+[source, shell]
+----
+$ npm install -g bower
+$ bower install -h
+Usage:
+
+    bower install [<options>]
+    bower install <endpoint> [<endpoint> ..] [<options>]
+Options:
+
+    -F, --force-latest      Force latest version on conflict
+    -h, --help              Show this help message
+    -p, --production        Do not install project devDependencies
+    -S, --save              Save installed packages into dependencies
+    -D, --save-dev          Save installed packages into devDependencies
+----
+[source, shell]
+----
+$ bower search angular
+----
+[source, shell]
+----
+$ bower info angular
+----
+
+[.topic.compact.fullscreen]
+== !
+[cols="2*"]
+|===
+| Registered package name 
+| jquery
+
+normalize
+
+css
+
+| Git endpoint 
+| https://github.com/user/package.git
+
+git@github.com:user/package.git
+
+| Local folder 
+| my/local/folder/
+
+| Public Subversion endpoint
+| svn+http://package.googlecode.com/svn/
+
+| Private Subversion endpoint
+| svn+ssh://package.googlecode.com/svn/
+
+svn+https://package.googlecode.com/svn/
+
+| Shorthand (defaults to GitHub)
+| user/package
+
+| URL
+| http://example.com/script.js
+
+http://example.com/style.css
+
+http://example.com/package.zip
+
+http://example.com/package.tar
+|===
+
+== !
+*Flat dependency tree*
+
+[.source]
+== bower.json 1/2
+[source, json]
+----
+{
+  "name": "my-project",
+  "description": "bla bla bla !",
+  "version": "1.0.0",
+  "main": "path/to/main.css",
+  "license": "AML",
+  "ignore": [
+    ".jshintrc",
+    "**/*.txt"
+  ],
+  "keywords": [
+    "awesome",
+    "project"
+  ],
+  "authors": [
+    "me",
+    "myself",
+  ],
+----
+
+[.source]
+== bower.json 2/2
+[source, json]
+----
+  "homepage": "http://project.org",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/foo/bar.git"
+  },
+  "dependencies": {
+    "<name>": "<version>",
+    "<name>": "<folder>",
+    "<name>": "<package>"
+  },
+  "devDependencies": {
+    "<test-framework-name>": "<version>"
+  },
+  "resolutions": {
+    "angular": "1.3.0-beta.16"
+  },
+  private: false
+}
+----
+
+[.ending]
+== démo
+
+[.topic]
+
+== !
+*Versionner ses dépendances ?*
+
+[.source]
+== npm
+[source, shell]
+----
+$ npm shrinkwrap
+
+{
+  "name": "A",
+  "version": "0.1.0",
+  "dependencies": {
+    "B": {
+      "version": "0.0.1",
+      "dependencies": {
+        "C": {
+          "version": "0.1.0"
+        }
+      }
+    }
+  }
+}
+----
+
+[.topic.compact]
+== !
+*Bower*
+
+* http://addyosmani.com/blog/checking-in-front-end-dependencies/
+
+[.topic.pull-center.fullscreen]
+== !
+image::lazy-cat.jpg[height="100%"]
+
+[.topic.pull-center]
+== !
+image::grunt-logo.svg[height="100%"]
+
+[.topic]
+== !
+[.incremental]
+* task runner
+* 21 sept. 2011
+* nombreux plugins
+
+[.source]
+== Grunt
+[source, shell]
+----
+$ npm install -g grunt-cli
+
+$ npm install -g grunt-init
+$ git clone https://github.com/gruntjs/grunt-init-gruntfile  \
+  ~/.grunt-init/gruntfile
+$ grunt-init gruntfile
+$ npm install
+----
+
+[.ending]
+== démo
+
+[.source]
+== grunt-wiredep
+[source, shell]
+----
+$ npm install --save-dev grunt-wiredep
+----
+
+[source, javascript]
+----
+grunt.loadNpmTasks('grunt-wiredep');
+
+wiredep: {
+    task: {
+        src: 'index.html'
+    }
+}
+----
+
+[source, html]
+----
+<!-- bower:js -->
+<!-- endbower -->
+
+<!-- bower:css -->
+<!-- endbower -->
+----
+
+[.source]
+== grunt-contrib-connect
+[source, shell]
+----
+$ npm install --save-dev grunt-contrib-connect
+----
+
+[source, javascript]
+----
+grunt.loadNpmTasks('grunt-contrib-connect');
+
+connect: {
+    server: {
+        options: {
+            port: 9000,
+            hostname: 'localhost'
+        }
+    }
+}
+----
+
+[.ending]
+== démo
+
+[.source]
+== grunt style
+[source, shell]
+----
+$ ls >> .tmpfile
+$ wc -l .tmpfile
+12 .tmpfile
+$ rm .tmpfile
+----
+
+[.topic.pull-center]
+== !
+image::gulp-logo.png[height="100%"]
+
+[.topic]
+== !
+[.incremental]
+* task runner
+* 4 Juil. 2013
+* code-over-configuration
+
+[.source]
+== gulp style
+[source, shell]
+----
+$ ls | wc -l
+12
+$
+----
+
+[.topic]
+== !
+*Stream*
+[.incremental]
+* Writable
+* Readable
+* Duplex
+* ``reader.pipe(writer);``
+
+[.topic.compact]
+== !
+* https://github.com/substack/stream-handbook
+* https://github.com/substack/stream-adventure
+
+[.topic.fullscreen.pull-center]
+== !
+image::top-gun.jpg[height="100%"]
+
+[.ending]
+== démo
+
+[.topic.fullscreen.pull-center]
+== !
+image::rocky-apollo.jpg[height="100%"]
+
+[.topic.fullscreen.pull-center]
+== !
+image::test-code.png[height="100%"]
+
+[.ending]
+== démo
+
+[.topic.fullscreen.pull-center.ending]
+== !
+image::yeoman-goals.png[height="100%"]
+
+[.topic]
+== !
+*Yeoman*
+[.incremental]
+* générateur de projets
+* interactions utilisateurs
+* composition de générateurs
+
+[.topic.source]
+== jhipster
+[source, shell]
+----
+$ npm install -g yo
+...
+$ npm install -g generator-jhipster
+...
+$ mkdir jhipster && cd jhipster
+$ yo jhipster
+...
+$ npm install
+$ bower install
+$ mvn spring-boot:run
+----
+
+[.ending]
+== démo
+
+[.topic]
+== Résumé
+[.incremental]
+* dependency management ~ *bower*
+* dependency ~ *index.html/plugin*
+* plugin management ~ *npm*
+* plugin ~ *grunt/gulp*
+* archetype ~ *yeoman*
+
+[.topic.pull-center]
+== !
+image::bower-logo.png[height="45%"]
+image::grunt-logo.svg[height="45%"]
+image::gulp-logo.png[height="45%"]
+image::yeoman-logo.png[height="45%"]
+*Questions ?*
